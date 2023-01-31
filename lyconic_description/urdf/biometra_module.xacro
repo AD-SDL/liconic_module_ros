@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<robot name="lyconic_Robots" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+ <!-- Materials -->
+  <xacro:include filename="$(find lyconic_description)/urdf/materials.xacro" />
+  
+  <!-- Module Carts -->
+  <xacro:include filename="$(find lyconic_description)/urdf/module_carts.urdf.xacro" />
+  <xacro:Module_Carts prefix="module_carts/"/>
+
+  <!-- lyconic -->
+  <xacro:include filename="$(find lyconic_description)/urdf/lyconic.urdf.xacro" />
+  <xacro:lyconic prefix="lyconic/"/>
+
+  <joint name="lyconic_Base" type="fixed">
+    <parent link="module_carts/cart_2"/>
+    <child link="lyconic/lyconic_base"/>
+    <axis xyz="0 0 0"/>
+    <origin xyz="0.2 -0.62 0" rpy="0 0 0"/>
+    <limit effort="1000.0" lower="0" upper="0" velocity="0.5"/>
+  </joint>
+
+  <joint name="lyconic_Base2" type="fixed">
+    <parent link="module_carts/cart_2"/>
+    <child link="lyconic/lyconic_base2"/>
+    <axis xyz="0 0 0"/>
+    <origin xyz="-0.1 -0.62 0" rpy="0 0 0"/>
+    <limit effort="1000.0" lower="0" upper="0" velocity="0.5"/>
+  </joint>
+  
+</robot>
