@@ -1,1 +1,1 @@
-# lyconic_module
+# liconic_module
