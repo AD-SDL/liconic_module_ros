@@ -11,5 +11,10 @@ def generate_launch_description():
             executable = 'liconic_client',
             output = "screen",
             name='liconicNode'
-        ),
-    ])
+        )
+    
+    launch_d = LaunchDescription()
+
+    launch_d.add_action(liconic_client)
+
+    return launch_d

@@ -60,7 +60,7 @@ class liconicNode(Node):
             else: 
                 return "BUSY"
     
-    
+
     
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
@@ -88,26 +88,41 @@ class liconicNode(Node):
         can preform.
         '''
 
-        if request.action_handle=='status':
-            self.liconic.get_status()
-            response.action_response = True
-        if request.action_handle=='open_lid':            
-            self.state = "BUSY"
-            self.stateCallback()
-            self.liconic.open_lid()    
-            response.action_response = True
-        if request.action_handle=='close_lid':            
-            self.state = "BUSY"
-            self.stateCallback()
-            self.liconic.close_lid()    
-            response.action_response = True
-        if request.action_handle=='close_lid':
-            self.state = "BUSY"
-            self.stateCallback()
+        # temperature actions
+        if request.action_handle=="get_current_temp": 
+            response.action_response = self.liconic.climate_controller.current_temperature
+        if request.action_handle=="get_target_temp":
+            response.action_response = self.liconic.climate_controller.target_temperature
+        if request.action_handle=="set_target_temp":
+
             vars = eval(request.vars)
             print(vars)
-            prog = vars.get('program_n')
-            self.liconic.run_program(prog)
+
+            temp = vars.get('temp')   # must be a float 
+
+            try: 
+                self.liconic.climate_controller.target_temperature = 
+
+        # if request.action_handle=='status':
+        #     self.liconic.get_status()
+        #     response.action_response = True
+        # if request.action_handle=='open_lid':            
+        #     self.state = "BUSY"
+        #     self.stateCallback()
+        #     self.liconic.open_lid()    
+        #     response.action_response = True
+        # if request.action_handle=='close_lid':            
+        #     self.state = "BUSY"
+        #     self.stateCallback()
+        #     self.liconic.close_lid()    
+        #     response.action_response = True
+        # if request.action_handle=='close_lid':
+        #     self.state = "BUSY"
+        #     self.stateCallback()
+        #     vars = eval(request.vars)
+        #     print(vars)
+        #     prog = vars.get('program_n')
+        #     self.liconic.run_program(prog)
         self.state = "COMPLETED"
 
         return response
