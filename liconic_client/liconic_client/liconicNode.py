@@ -1,15 +1,17 @@
 #! /usr/bin/env python3
 
+import stx                  # import liconic driver
+from stx import Stx
+
 import rclpy                 # import Rospy
 from rclpy.node import Node  # import Rospy Node
-from std_msgs.msg import String
 
-from wei_services.srv import WeiDescription 
+from wei_services.srv import WeiDescription  # import workcell execution interface (wei)
 from wei_services.srv import WeiActions   
 
+from std_msgs.msg import String         # other imports
+from typing import List, Tuple
 from time import sleep
-
-from liconic_driver.liconic_driver import liconic_trobot
 
 class liconicNode(Node):
     '''
@@ -24,16 +26,15 @@ class liconicNode(Node):
 
         super().__init__(NODE_NAME)
         
-        self.liconic = liconic()
-        self.state = "READY"
+        self.liconic = Stx('/dev/ttyUSB3')  # TODO: this should be moved to a different file
+        # self.state = "READY"
 
-        
         self.description = {
             'name': NODE_NAME,
-            'type': 'liconic_thermocicler',
+            'type': 'liconic_incubator',
             'actions':
             {
-                'status':'',
+                'status':'',  # TODO: add the correct actions here
                 'open_lid':'',
                 'close_lid':'',
                 'run_program':'program_n'
@@ -41,12 +42,25 @@ class liconicNode(Node):
         }
 
         timer_period = 1  # seconds
-        self.statePub = self.create_publisher(String, 'liconic_state', 10)
+        self.statePub = self.create_publisher(String, 'liconic_state', 10)   # TODO: How does this actually connect back to the liconic state?
         self.stateTimer = self.create_timer(timer_period, self.stateCallback)
 
         self.actionSrv = self.create_service(WeiActions, NODE_NAME + "/action_handler", self.actionCallback)
         self.descriptionSrv = self.create_service(WeiDescription, NODE_NAME + "/description_handler", self.descriptionCallback)
 
+    
+    @property 
+    def state(self) -> str: 
+        """'READY' if device is ready, 'ERROR' if device reports error, 'BUSY' otherwise"""
+        if self.liconic.ready == True: 
+            return "READY"
+        elif self.liconic.ready == False: 
+            if self.liconic.has_error == True: 
+                return "ERROR"
+            else: 
+                return "BUSY"
+    
+    
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
         can preform as well as deliver essential information required by the master node.
@@ -105,7 +119,8 @@ class liconicNode(Node):
         msg.data = 'State: %s' % self.state
         self.statePub.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
-        self.state = "READY"
+        # self.state = "READY"  # should not be setting this to ready
+
 
 def main(args = None):
     NAME = "liconicNode"
