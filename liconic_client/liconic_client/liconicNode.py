@@ -61,6 +61,7 @@ class liconicNode(Node):
                 return "BUSY"
     
     
+    
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
         can preform as well as deliver essential information required by the master node.
