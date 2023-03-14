@@ -18,7 +18,7 @@ class liconicNode(Node):
     The liconicNode inputs data from the 'action' topic, providing a set of commands for the driver to execute. It then receives feedback, 
     based on the executed command and publishes the state of the liconic and a description of the liconic to the respective topics.
     '''
-    def __init__(self, NODE_NAME = "liconicNode"):
+    def __init__(self, NODE_NAME = "Liconic_Client_Node"):
         '''
         The init function is neccesary for the liconicNode class to initialize all variables, parameters, and other functions.
         Inside the function the parameters exist, and calls to other functions and services are made so they can be executed in main.
@@ -93,15 +93,21 @@ class liconicNode(Node):
             response.action_response = self.liconic.climate_controller.current_temperature
         if request.action_handle=="get_target_temp":
             response.action_response = self.liconic.climate_controller.target_temperature
-        if request.action_handle=="set_target_temp":
+        # if request.action_handle=="set_target_temp":
 
-            vars = eval(request.vars)
-            print(vars)
+        #     vars = eval(request.vars)
+        #     print(vars)
 
-            temp = vars.get('temp')   # must be a float 
+        #     temp = vars.get('temp')   # must be a float 
 
-            try: 
-                self.liconic.climate_controller.target_temperature = 
+        #     try: 
+        #         self.liconic.climate_controller.target_temperature = temp
+
+        #     except Exception as error_msg:
+        #         print("TODO: handle exception")
+        #         # self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
+
+                
 
         # if request.action_handle=='status':
         #     self.liconic.get_status()
@@ -123,8 +129,9 @@ class liconicNode(Node):
         #     print(vars)
         #     prog = vars.get('program_n')
         #     self.liconic.run_program(prog)
-        self.state = "COMPLETED"
+        # self.state = "COMPLETED"
 
+        
         return response
 
     def stateCallback(self):
