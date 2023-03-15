@@ -60,8 +60,6 @@ class liconicNode(Node):
             else: 
                 return "BUSY"
     
-
-    
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
         can preform as well as deliver essential information required by the master node.
@@ -90,22 +88,22 @@ class liconicNode(Node):
 
         # temperature actions
         if request.action_handle=="get_current_temp": 
-            response.action_response = self.liconic.climate_controller.current_temperature
-        if request.action_handle=="get_target_temp":
+            response.action_response = 0
+            response.action_msg = str(self.liconic.climate_controller.current_temperature)
+        elif request.action_handle=="get_target_temp":
             response.action_response = self.liconic.climate_controller.target_temperature
-        # if request.action_handle=="set_target_temp":
-
-        #     vars = eval(request.vars)
-        #     print(vars)
-
-        #     temp = vars.get('temp')   # must be a float 
-
-        #     try: 
-        #         self.liconic.climate_controller.target_temperature = temp
-
-        #     except Exception as error_msg:
-        #         print("TODO: handle exception")
-        #         # self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
+        elif request.action_handle=="set_target_temp":
+            vars = eval(request.vars)
+            temp = float(vars.get('temp'))   # must be a float 
+            try: 
+                self.liconic.climate_controller.target_temperature = temp
+                response.action_response = 0
+                response.action_msg = str(self.liconic.climate_controller.target_temperature)
+            except Exception as error_msg:
+                print("TODO: handle exception")
+                response.action_response = -1
+                response.action_msg = "shit'sfucked"
+                # self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
 
                 
 
