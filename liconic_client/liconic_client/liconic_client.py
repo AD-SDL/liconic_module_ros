@@ -13,6 +13,7 @@ from std_msgs.msg import String         # other imports
 from typing import List, Tuple
 from time import sleep
 
+
 class liconicNode(Node):
     '''
     The liconicNode inputs data from the 'action' topic, providing a set of commands for the driver to execute. It then receives feedback, 
@@ -87,25 +88,52 @@ class liconicNode(Node):
         '''
 
         # temperature actions
-        if request.action_handle=="get_current_temp": 
+        if request.action_handle == "get_current_temp": 
             response.action_response = 0
             response.action_msg = str(self.liconic.climate_controller.current_temperature)
-        elif request.action_handle=="get_target_temp":
-            response.action_response = self.liconic.climate_controller.target_temperature
-        elif request.action_handle=="set_target_temp":
+        
+        elif request.action_handle == "get_target_temp":
+            response.action_response = 0
+            response.action_msg = str(self.liconic.climate_controller.target_temperature)
+        
+        elif request.action_handle == "set_target_temp":
             vars = eval(request.vars)
             temp = float(vars.get('temp'))   # must be a float 
+            # TODO: make sure this is a float and handle exceptions
             try: 
                 self.liconic.climate_controller.target_temperature = temp
                 response.action_response = 0
-                response.action_msg = str(self.liconic.climate_controller.target_temperature)
+                response.action_msg = "Target temperature = " + str(self.liconic.climate_controller.target_temperature)
             except Exception as error_msg:
                 print("TODO: handle exception")
                 response.action_response = -1
-                response.action_msg = "shit'sfucked"
-                # self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
+                response.action_msg = "Error: Could not reset liconic temperature"
+                self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
 
-                
+        # humidity actions
+        elif request.action_handle == "get_current_humidity": 
+            response.action_response = 0
+            response.action_msg = str(self.liconic.climate_controller.current_humidity)
+        
+        elif request.action_handle == "get_target_humidity":
+            response.action_response = 0
+            response.action_msg = str(self.liconic.climate_controller.target_humidity)
+
+        elif request.action_handle == "set_target_humidity": 
+            vars = eval(request.vars)
+            humidity = float(vars.get('humidity'))  
+            # TODO: make sure humidity is a float and handle exceptions
+            try: 
+                self.liconic.climate_controller.target_humidity = humidity
+                response.action_response = 0
+                response.action_msg = "Target humidity = " + str(self.liconic.climate_controller.target_humidity)
+            except Exception as error_msg: 
+                print("TODO: handle exception")
+                response.action_response = -1
+                response.action_msg = "Error: Could not reset liconic humidity"
+                self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
+
+
 
         # if request.action_handle=='status':
         #     self.liconic.get_status()
