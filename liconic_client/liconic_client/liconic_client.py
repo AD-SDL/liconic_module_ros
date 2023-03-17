@@ -19,16 +19,23 @@ class liconicNode(Node):
     The liconicNode inputs data from the 'action' topic, providing a set of commands for the driver to execute. It then receives feedback, 
     based on the executed command and publishes the state of the liconic and a description of the liconic to the respective topics.
     '''
-    def __init__(self, NODE_NAME = "Liconic_Client_Node"):
+    def __init__(self, PORT='/dev/ttyUSB3', NODE_NAME = "Liconic_Client_Node"):
         '''
         The init function is neccesary for the liconicNode class to initialize all variables, parameters, and other functions.
         Inside the function the parameters exist, and calls to other functions and services are made so they can be executed in main.
         '''
 
         super().__init__(NODE_NAME)
+        self.node_name = self.get_name()
+
+        self.declare_parameter("port",PORT)
+
+        # Receiving the real PORT from the launch parameters
+        self.port =  self.get_parameter("port").get_parameter_value().string_value
+
+        # super().__init__(NODE_NAME)
         
-        self.liconic = Stx('/dev/ttyUSB3')  # TODO: this should be moved to a different file
-        # self.state = "READY"
+        self.liconic = Stx(self.port)  
 
         self.description = {
             'name': NODE_NAME,
@@ -38,7 +45,7 @@ class liconicNode(Node):
                 'status':'',  # TODO: add the correct actions here
                 'open_lid':'',
                 'close_lid':'',
-                'run_program':'program_n'
+                'set_humidity':'humidity'
             }
         }
 
@@ -164,6 +171,9 @@ class liconicNode(Node):
                         self.liconic.shaker_controller.activate_shaker()
                         # check that liconic is now shaking
                             # TODO: might need to wait a bit before checking, I'm not sure if will return True immediately
+                        # while not self.liconic.shaker_controller.shaker_is_active:
+                        #     sleep(1)
+                        #     # TODO: put timeout here
                         # format returns
                         response.action_response = 0
                         response.action_msg = "Liconic shaker activated, shaker speed: " + str(self.liconic.shaker_controller.shaker_speed)
