@@ -51,7 +51,7 @@ class liconicNode(Node):
 
     
     @property 
-    def state(self) -> str: 
+    def machine_state(self) -> str: 
         """'READY' if device is ready, 'ERROR' if device reports error, 'BUSY' otherwise"""
         if self.liconic.ready == True: 
             return "READY"
@@ -87,7 +87,7 @@ class liconicNode(Node):
         can preform.
         '''
 
-        # temperature actions
+        # temperature control actions
         if request.action_handle == "get_current_temp": 
             response.action_response = 0
             response.action_msg = str(self.liconic.climate_controller.current_temperature)
@@ -110,7 +110,7 @@ class liconicNode(Node):
                 response.action_msg = "Error: Could not reset liconic temperature"
                 self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
 
-        # humidity actions
+        # humidity control actions
         elif request.action_handle == "get_current_humidity": 
             response.action_response = 0
             response.action_msg = str(self.liconic.climate_controller.current_humidity)
@@ -132,6 +132,92 @@ class liconicNode(Node):
                 response.action_response = -1
                 response.action_msg = "Error: Could not reset liconic humidity"
                 self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
+
+        # CO2 control actions 
+            # TODO - we don't use these actions now
+
+        # Gas control actions - gas port 1
+            # TODO - we don't use these actions now 
+
+        # Gas control actions - gas port 2
+            # TODO - we don't use these actions now 
+
+        # Shaker actions
+            # ACTIONS TO IMPLEMENT: 
+            # Begin shake (or start shake?)
+            # End shake  (or stop shake?)
+            # Timed shake (but don't block the thread while waiting)
+        elif request.action_handle == "begin_shake":
+            vars = eval(request.vars)
+            new_shaker_speed = int(vars.get('shaker_speed')) 
+            # TODO: make sure shaker speed is a in 1 to 50 inclusive and handle exceptions
+            # TODO: make shaker speed a client variable so it doesn't have to be specified each time 
+            try: 
+                if self.liconic.shaker_controller.shaker_is_active == True:
+                    if not new_shaker_speed == self.liconic.shaker_controller.shaker_speed:
+                        """already shaking but not at desired speed""" 
+                        # stop shaking 
+                        self.liconic.shaker_controller.stop_shaker()
+                        # set shaking speed to new value 
+                        self.liconic.shaker_controller.shaker_speed = new_shaker_speed
+                        # restart shaking at new speed 
+                        self.liconic.shaker_controller.activate_shaker()
+                        # check that liconic is now shaking
+                            # TODO: might need to wait a bit before checking, I'm not sure if will return True immediately
+                        # format returns
+                        response.action_response = 0
+                        response.action_msg = "Liconic shaker activated, shaker speed: " + str(self.liconic.shaker_controller.shaker_speed)
+                    else: 
+                        """already shaking at desired speed"""
+                        # format returns
+                        response.action_response = 0
+                        response.action_msg = "Liconic shaker activated, shaker speed: " + str(self.liconic.shaker_controller.shaker_speed)
+                elif self.liconic.shaker_controller.shaker_is_active == False:
+                    """not already shaking"""
+                    # set shaking speed to new value (regardless of if already set to new value)
+                    self.liconic.shaker_controller.shaker_speed = new_shaker_speed
+                    # start shaking
+                    self.liconic.shaker_controller.activate_shaker()
+                    # TODO: check that liconic has started shaking 
+                    # format returns 
+                    response.action_response = 0
+                    response.action_msg = "Liconic shaker activated, shaker speed: " + str(self.liconic.shaker_controller.shaker_speed)
+                else: 
+                    """catch for any other liconic shaking states"""  # maybe remove else statement
+                    response.action_response = -1
+                    response.action_msg = "Error: Liconic could not begin shake"
+            
+            except Exception as error_msg: 
+                print("TODO: handle exception")
+                response.action_response = -1
+                response.action_msg = "Error: Liconic could not begin shake"
+                self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
+
+
+                # if shaker is shaking and new speed matches old speed - do nothing 
+                # if shaker is shaking and new speed not = to old speed - stop shaking then start at new speed
+                # is shaker not shaking, reset speed to new speed and start shaking 
+            
+
+                
+
+        # Plate handling actions 
+            # Load Plate 
+            # Unload Plate 
+            # Timed load, shake, unload? - how to do this?
+            # Display Contents? 
+        elif request.action_handle == "load_plate":
+            pass
+            # 1.) check that overall state is ready (or just state of the machine?)
+            # 2.) check that plate is placed on l
+
+        
+        elif request.action_handle == "unload_plate": 
+            pass 
+
+        
+
+        
 
 
 
@@ -165,7 +251,7 @@ class liconicNode(Node):
         Publishes the liconic state to the 'state' topic. 
         '''
         msg = String()
-        msg.data = 'State: %s' % self.state
+        msg.data = 'State: %s' % self.machine_state
         self.statePub.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
         # self.state = "READY"  # should not be setting this to ready
