@@ -94,7 +94,7 @@ class liconicNode(Node):
         can preform.
         '''
 
-        # temperature control actions
+        # Temperature control actions
         if request.action_handle == "get_current_temp": 
             response.action_response = 0
             response.action_msg = str(self.liconic.climate_controller.current_temperature)
@@ -117,7 +117,7 @@ class liconicNode(Node):
                 response.action_msg = "Error: Could not reset liconic temperature"
                 self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
 
-        # humidity control actions
+        # Humidity control actions
         elif request.action_handle == "get_current_humidity": 
             response.action_response = 0
             response.action_msg = str(self.liconic.climate_controller.current_humidity)
@@ -151,9 +151,7 @@ class liconicNode(Node):
 
         # Shaker actions
             # ACTIONS TO IMPLEMENT: 
-            # Begin shake (or start shake?)
-            # End shake  (or stop shake?)
-            # Timed shake (but don't block the thread while waiting)
+            # Timed shake (but don't block the thread while waiting) 
         elif request.action_handle == "begin_shake":
             vars = eval(request.vars)
             new_shaker_speed = int(vars.get('shaker_speed')) 
@@ -162,7 +160,7 @@ class liconicNode(Node):
             try: 
                 if self.liconic.shaker_controller.shaker_is_active == True:
                     if not new_shaker_speed == self.liconic.shaker_controller.shaker_speed:
-                        """already shaking but not at desired speed""" 
+                        """already shaking but not at the desired speed""" 
                         # stop shaking 
                         self.liconic.shaker_controller.stop_shaker()
                         # set shaking speed to new value 
@@ -203,57 +201,70 @@ class liconicNode(Node):
                 response.action_msg = "Error: Liconic could not begin shake"
                 self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
 
+        elif request.action_handle == "end_shake":
+            self.liconic.shaker_controller.stop_shaker()
+            # TODO: check that shaker did stop with shaker_is_active driver property
+            response.action_response = 0
+            response.action_msg = "Liconic shaker stopped"
 
-                # if shaker is shaking and new speed matches old speed - do nothing 
-                # if shaker is shaking and new speed not = to old speed - stop shaking then start at new speed
-                # is shaker not shaking, reset speed to new speed and start shaking 
-            
-
-                
 
         # Plate handling actions 
             # Load Plate 
             # Unload Plate 
             # Timed load, shake, unload? - how to do this?
             # Display Contents? 
+
         elif request.action_handle == "load_plate":
-            pass
-            # 1.) check that overall state is ready (or just state of the machine?)
-            # 2.) check that plate is placed on l
+            # TODO: should also be able to unload by plate ID or barcode
+            vars = eval(request.vars)
+            stacker = int(vars.get('stacker')) 
+            slot = int(vars.get('slot'))
+            # TODO: ensure both variables are valid integers
+            try: 
+                # TODO: check that the robot state is ready here - YES
+                # check that transfer station is occupied
+                if not self.liconic.plate_handler.transfer_station_occupied: 
+                    response.acttion_response = -1 
+                    response.action_msg = "Error: cannot load liconic. No plate on transfer station"
+                else: 
+                    self.liconic.plate_handler.move_plate_from_transfer_station_to_slot(stacker, slot)
+                    response.action_response = 0
+                    response.action_msg = "Plate loaded into liconic stack " + stacker + ", slot " + slot
+            except Exception as error_msg: 
+                response.action_response = -1
+                response.action_msg = "Error: Liconic could not load plate"
+                self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
 
-        
         elif request.action_handle == "unload_plate": 
-            pass 
+            # TODO: should also be able to unload by plate ID or barcode
+            vars = eval(request.vars)
+            stacker = int(vars.get('stacker')) 
+            slot = int(vars.get('slot'))
+            # TODO: ensure both variables are valid integers
 
-        
+            try: 
+                # TODO: check that the robot state is ready here - YES
+                # TODO: check that plate is at this location according to records 
 
-        
+                # complete action
+                self.liconic.plate_handler.move_plate_from_slot_to_transfer_station(stacker, slot)
 
+                # log if plate is now on transfer station 
+                if self.liconic.plate_handler.transfer_station_occupied: 
+                    self.get_logger().info("Liconic transfer station occupied")
+                else: 
+                    self.get_logger().info("Liconic transfer station empty")
+                
+                # format response
+                response.action_response = 0
+                response.action_msg = "Plate unloaded from liconic stack - " + stacker + ", slot " + slot
 
+            except Exception as error_msg: 
+                response.action_response = -1
+                response.action_msg = "Error: Liconic could not unload plate"
+                self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
 
-        # if request.action_handle=='status':
-        #     self.liconic.get_status()
-        #     response.action_response = True
-        # if request.action_handle=='open_lid':            
-        #     self.state = "BUSY"
-        #     self.stateCallback()
-        #     self.liconic.open_lid()    
-        #     response.action_response = True
-        # if request.action_handle=='close_lid':            
-        #     self.state = "BUSY"
-        #     self.stateCallback()
-        #     self.liconic.close_lid()    
-        #     response.action_response = True
-        # if request.action_handle=='close_lid':
-        #     self.state = "BUSY"
-        #     self.stateCallback()
-        #     vars = eval(request.vars)
-        #     print(vars)
-        #     prog = vars.get('program_n')
-        #     self.liconic.run_program(prog)
         # self.state = "COMPLETED"
-
-        
         return response
 
     def stateCallback(self):
