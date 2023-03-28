@@ -24,7 +24,7 @@ setup(
     license='MIT License',
     entry_points={ 
         'console_scripts': [
-            'liconicNode = liconic_client.liconicNode:main',
+            'liconic_client = liconic_client.liconic_client:main',
         ]
     },
 )
