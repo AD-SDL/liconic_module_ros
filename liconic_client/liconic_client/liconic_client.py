@@ -264,6 +264,7 @@ class liconicNode(Node):
                         response.action_msg = "Error: cannot load liconic. No plate on transfer station"
                     else: 
                         self.liconic.plate_handler.move_plate_from_transfer_station_to_slot(stacker, slot)
+                        sleep(20)  # wait for action to finish 
                         response.action_response = 0
                         response.action_msg = "Plate loaded into liconic stack " + str(stacker) + ", slot " + str(slot)
                 except Exception as error_msg: 
@@ -292,6 +293,7 @@ class liconicNode(Node):
                     if not self.liconic.plate_handler.transfer_station_occupied: 
                         # complete action
                         self.liconic.plate_handler.move_plate_from_slot_to_transfer_station(stacker, slot)
+                        sleep(18) # wait for plate to unload 
                         # log if plate is now on transfer station 
                         if self.liconic.plate_handler.transfer_station_occupied: 
                             self.get_logger().info("Liconic transfer station occupied")
