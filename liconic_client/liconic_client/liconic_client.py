@@ -1,7 +1,9 @@
 #! /usr/bin/env python3
 
+import os
 import stx                  # import liconic driver
 from stx import Stx
+from pathlib import Path
 
 import rclpy                 # import Rospy
 from rclpy.node import Node  # import Rospy Node
@@ -33,7 +35,10 @@ class liconicNode(Node):
         # Receiving the real PORT from the launch parameters
         self.port =  self.get_parameter("port").get_parameter_value().string_value
         
-        self.liconic = Stx(self.port)  
+        self.liconic = Stx(self.port)
+
+        self.resources_folder_path = '/home/rpl/.liconic_temp/' + self.node_name + "/" + "resources/"   
+        self.check_resources_folder()
 
         self.description = {
             'name': NODE_NAME,
@@ -242,6 +247,7 @@ class liconicNode(Node):
 
         # Plate handling actions 
             # TODO: implement resouce tracking and way to visualize those resources
+            resource_file_flag = self.action_vars.get("use_existing_resources", "False")
 
         elif request.action_handle == "load_plate":
             # TODO: should also be able to unload by plate ID or barcode (requires resource tracking to be implemented)
@@ -323,6 +329,16 @@ class liconicNode(Node):
         self.statePub.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
         # self.state = "READY"  # should not be setting this to ready
+
+    def check_resources_folder(self):
+        '''
+        checks if resource file path exists, if not, creates one
+        '''
+        isPathExist = os.path.exists(self.resources_folder_path)
+        if not isPathExist:
+            os.makedirs(self.resources_folder_path)
+            self.get_logger().warn("Resource path doesn't exists")
+            self.get_logger().info("Creating: " + self.resources_folder_path)
 
 
 def main(args = None):
