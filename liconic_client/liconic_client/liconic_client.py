@@ -37,8 +37,10 @@ class liconicNode(Node):
         self.port =  self.get_parameter("port").get_parameter_value().string_value
         
         self.liconic = Stx(self.port)
+        
+        self.resources = Resource()
 
-        self.resources_folder_path = '/home/rpl/.liconic_temp/' + self.node_name + "/" + "resources/"   # TODO: path to folder or path to direct file?
+        self.resources_folder_path = '/home/rpl/liconic_temp/resources/'  # TODO: path to folder or path to direct file?
         self.check_resources_folder()
 
         self.description = {
@@ -262,9 +264,9 @@ class liconicNode(Node):
                 self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
             else:
                 if stacker == None and slot == None: # TODO: What if user gives certain stack but not slot?
-                    stacker, slot = Resource.get_next_free_slot_int()
+                    stacker, slot = self.resources.get_next_free_slot_int()
                 # TODO: check that valid stack and slot numbers were chosen
-                if Resource.is_location_occupied(stacker, slot) == True:
+                if self.resources.is_location_occupied(stacker, slot) == True:
                     self.get_logger().error("load_plate command cannot be completed, already plate in given position")
                 else:
                     # complete action if no other exceptions raised
@@ -279,7 +281,7 @@ class liconicNode(Node):
                             response.action_response = 0
                             response.action_msg = "Plate loaded into liconic stack " + str(stacker) + ", slot " + str(slot)
                             # edit resource file
-                            Resource.add_plate(plate_id, stacker, slot)
+                            self.resources.add_plate(plate_id, stacker, slot)
                     except Exception as error_msg: 
                         response.action_response = -1
                         response.action_msg = "Error: Liconic could not load plate"
@@ -298,10 +300,10 @@ class liconicNode(Node):
             else:
                 if stacker == None and slot == None:
                     # get location based on plate id
-                    stacker, slot = Resource.find_plate(plate_id)
-                    stacker, slot = Resource.convert_stack_and_slot_to_int(stacker, slot)
+                    stacker, slot = self.resources.find_plate(plate_id)
+                    stacker, slot = self.resources.convert_stack_and_slot_to_int(stacker, slot)
                 
-                if Resource.is_location_occupied(stacker, slot) == False:
+                if self.resources.is_location_occupied(stacker, slot) == False:
                     self.get_logger().error("unload_plate command cannot be completed, already plate in given position")
 
                 # complete action if no other exceptions were raised 
@@ -320,7 +322,7 @@ class liconicNode(Node):
                         # format response
                         response.action_response = 0
                         response.action_msg = "Plate unloaded from liconic stack " + str(stacker) + ", slot " + str(slot)
-                        Resource.remove_plate(plate_id)
+                        self.resources.remove_plate(plate_id)
                     else: # transfer station already occupied 
                         response.action_response = -1
                         response.action_msg = "Error: Liconic cannot unload plate, transfer station is occupied"

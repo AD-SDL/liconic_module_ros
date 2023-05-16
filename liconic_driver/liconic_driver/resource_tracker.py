@@ -5,7 +5,7 @@ import datetime
 class Resource():
     def __init__(self):
         #TODO: import path from client
-        self.resources = json.load(open('/Users/abestroka/Argonne/git_repos/liconic_module/liconic_driver/liconic_driver/liconic_resources.json'))
+        self.resources = json.load(open('/home/rpl/liconic_temp/resources/liconic_resources.json'))
 
     def add_plate(self, plate_id, stack = None, slot = None): #TODO: add parameter for identifying plate type if we have multiple types of stacks in liconic
         '''
