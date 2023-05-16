@@ -14,7 +14,7 @@ from wei_services.srv import WeiActions
 from std_msgs.msg import String         # other imports
 from typing import List, Tuple
 from time import sleep
-from liconic_driver import Resource
+from liconic_driver.resource_tracker import Resource
 
 
 class liconicNode(Node):
@@ -41,7 +41,7 @@ class liconicNode(Node):
         self.resources = Resource()
 
         self.resources_folder_path = '/home/rpl/liconic_temp/resources/'  # TODO: path to folder or path to direct file?
-        self.check_resources_folder()
+        # self.check_resources_folder()
 
         self.description = {
             'name': NODE_NAME,
@@ -255,9 +255,12 @@ class liconicNode(Node):
         elif request.action_handle == "load_plate":
             try:
                 vars = eval(request.vars)
-                stacker = int(vars.get('stacker', None)) 
-                slot = int(vars.get('slot', None))
-                plate_id = int(vars.get('plate_id')) # TODO: default plate id value?
+                stacker = vars.get('stacker', None)
+                slot = vars.get('slot', None)
+                plate_id = vars.get('plate_id') # TODO: default plate id value?
+                # self.get_logger().warn(str(stacker))
+                # self.get_logger().warn(str(slot))
+                # self.get_logger().warn(str(plate_id))
             except ValueError as error_msg: 
                 response.action_response = -1
                 response.action_msg = "Error: stacker and slot variables must be integers"
@@ -266,6 +269,9 @@ class liconicNode(Node):
                 if stacker == None and slot == None: # TODO: What if user gives certain stack but not slot?
                     stacker, slot = self.resources.get_next_free_slot_int()
                 # TODO: check that valid stack and slot numbers were chosen
+                else:
+                    stacker = int(stacker)
+                    slot = int(slot)
                 if self.resources.is_location_occupied(stacker, slot) == True:
                     self.get_logger().error("load_plate command cannot be completed, already plate in given position")
                 else:
@@ -281,6 +287,10 @@ class liconicNode(Node):
                             response.action_response = 0
                             response.action_msg = "Plate loaded into liconic stack " + str(stacker) + ", slot " + str(slot)
                             # edit resource file
+                            self.get_logger().info("Updating liconic resource file")
+                            # self.get_logger().warn(str(stacker))
+                            # self.get_logger().warn(str(slot))
+                            # self.get_logger().warn(str(plate_id))
                             self.resources.add_plate(plate_id, stacker, slot)
                     except Exception as error_msg: 
                         response.action_response = -1
@@ -290,9 +300,9 @@ class liconicNode(Node):
         elif request.action_handle == "unload_plate": 
             try: 
                 vars = eval(request.vars)
-                stacker = int(vars.get('stacker', None)) 
-                slot = int(vars.get('slot', None))
-                plate_id = int(vars.get('plate_id')) # TODO: default plate id value?
+                stacker = vars.get('stacker', None)
+                slot = vars.get('slot', None)
+                plate_id = vars.get('plate_id') # TODO: default plate id value?
             except ValueError as error_msg: 
                 response.action_response = -1
                 response.action_msg = "Error: stacker and slot variables must be integers"
@@ -301,10 +311,13 @@ class liconicNode(Node):
                 if stacker == None and slot == None:
                     # get location based on plate id
                     stacker, slot = self.resources.find_plate(plate_id)
-                    stacker, slot = self.resources.convert_stack_and_slot_to_int(stacker, slot)
+                    stacker, slot = self.resources.convert_stack_and_slot_int(stacker, slot)
+                else:
+                    stacker = int(stacker)
+                    slot = int(slot)
                 
                 if self.resources.is_location_occupied(stacker, slot) == False:
-                    self.get_logger().error("unload_plate command cannot be completed, already plate in given position")
+                    self.get_logger().error("unload_plate command cannot be completed, no plate in given position")
 
                 # complete action if no other exceptions were raised 
                 try: 

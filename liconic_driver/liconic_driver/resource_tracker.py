@@ -5,7 +5,8 @@ import datetime
 class Resource():
     def __init__(self):
         #TODO: import path from client
-        self.resources = json.load(open('/home/rpl/liconic_temp/resources/liconic_resources.json'))
+        self.resource_path = '/home/rpl/liconic_temp/resources/liconic_resources.json'
+        self.resources = json.load(open(self.resource_path))
 
     def add_plate(self, plate_id, stack = None, slot = None): #TODO: add parameter for identifying plate type if we have multiple types of stacks in liconic
         '''
@@ -18,7 +19,7 @@ class Resource():
             else:
                 self.resources[stack][slot]["occupied"] = True
                 self.resources[stack][slot]["plate_id"] = plate_id
-                self.resources[stack][slot]["time_added"] = datetime.datetime.now()
+                self.resources[stack][slot]["time_added"] = str(datetime.datetime.now())
                 self.update_resource_file()
         else:
             stack, slot = self.get_next_free_slot_int()
@@ -42,7 +43,8 @@ class Resource():
         else:
             self.resources[stack][slot]["occupied"] = False
             self.resources[stack][slot]["plate_id"] = "NONE"
-            # self.resources[stack][slot]["time_added"] = datetime.datetime.now()
+            self.resources[stack][slot]["time_added"] = "NONE"
+            #TODO: get elapsed time of plate storage
             self.update_resource_file()
     
     def find_plate(self, plate_id):
@@ -93,6 +95,8 @@ class Resource():
         '''
         given a stack and slot, determine if the location is occupied
         '''
+        if type(stack) == int or type(slot) == int:
+            stack, slot = self.convert_stack_and_slot_key(stack, slot)
         return self.resources[stack][slot]["occupied"]
     
     def check_existing_id(self, plate_id):
@@ -114,7 +118,7 @@ class Resource():
         '''
         updates the external resource file to match self.resources
         '''
-        with open('liconic_resources.json', 'w') as f:
+        with open(self.resource_path, 'w') as f:
             json.dump(self.resources, f)
     
 if __name__ == "__main__":
