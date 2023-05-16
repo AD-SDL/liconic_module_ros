@@ -14,6 +14,7 @@ from wei_services.srv import WeiActions
 from std_msgs.msg import String         # other imports
 from typing import List, Tuple
 from time import sleep
+from liconic_driver import Resource
 
 
 class liconicNode(Node):
@@ -37,7 +38,7 @@ class liconicNode(Node):
         
         self.liconic = Stx(self.port)
 
-        self.resources_folder_path = '/home/rpl/.liconic_temp/' + self.node_name + "/" + "resources/"   
+        self.resources_folder_path = '/home/rpl/.liconic_temp/' + self.node_name + "/" + "resources/"   # TODO: path to folder or path to direct file?
         self.check_resources_folder()
 
         self.description = {
@@ -247,53 +248,64 @@ class liconicNode(Node):
 
         # Plate handling actions 
             # TODO: implement resouce tracking and way to visualize those resources
-            resource_file_flag = self.action_vars.get("use_existing_resources", "False")
+            # resource_file_flag = self.action_vars.get("use_existing_resources", "False")
 
         elif request.action_handle == "load_plate":
-            # TODO: should also be able to unload by plate ID or barcode (requires resource tracking to be implemented)
             try:
                 vars = eval(request.vars)
-                stacker = int(vars.get('stacker')) 
-                slot = int(vars.get('slot'))
+                stacker = int(vars.get('stacker', None)) 
+                slot = int(vars.get('slot', None))
+                plate_id = int(vars.get('plate_id')) # TODO: default plate id value?
             except ValueError as error_msg: 
                 response.action_response = -1
                 response.action_msg = "Error: stacker and slot variables must be integers"
                 self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
-            else: 
+            else:
+                if stacker == None and slot == None: # TODO: What if user gives certain stack but not slot?
+                    stacker, slot = Resource.get_next_free_slot_int()
                 # TODO: check that valid stack and slot numbers were chosen
-
-                # complete action if no other exceptions raised
-                try: 
-                    # check that transfer station is occupied
-                    if not self.liconic.plate_handler.transfer_station_occupied: 
-                        response.acttion_response = -1 
-                        response.action_msg = "Error: cannot load liconic. No plate on transfer station"
-                    else: 
-                        self.liconic.plate_handler.move_plate_from_transfer_station_to_slot(stacker, slot)
-                        sleep(20)  # wait for action to finish 
-                        response.action_response = 0
-                        response.action_msg = "Plate loaded into liconic stack " + str(stacker) + ", slot " + str(slot)
-                except Exception as error_msg: 
-                    response.action_response = -1
-                    response.action_msg = "Error: Liconic could not load plate"
-                    self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
+                if Resource.is_location_occupied(stacker, slot) == True:
+                    self.get_logger().error("load_plate command cannot be completed, already plate in given position")
+                else:
+                    # complete action if no other exceptions raised
+                    try: 
+                        # check that transfer station is occupied
+                        if not self.liconic.plate_handler.transfer_station_occupied: 
+                            response.acttion_response = -1 
+                            response.action_msg = "Error: cannot load liconic. No plate on transfer station"
+                        else: 
+                            self.liconic.plate_handler.move_plate_from_transfer_station_to_slot(stacker, slot)
+                            sleep(20)  # wait for action to finish 
+                            response.action_response = 0
+                            response.action_msg = "Plate loaded into liconic stack " + str(stacker) + ", slot " + str(slot)
+                            # edit resource file
+                            Resource.add_plate(plate_id, stacker, slot)
+                    except Exception as error_msg: 
+                        response.action_response = -1
+                        response.action_msg = "Error: Liconic could not load plate"
+                        self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
 
         elif request.action_handle == "unload_plate": 
-            # TODO: should also be able to unload by plate ID or barcode
             try: 
                 vars = eval(request.vars)
-                stacker = int(vars.get('stacker')) 
-                slot = int(vars.get('slot'))
+                stacker = int(vars.get('stacker', None)) 
+                slot = int(vars.get('slot', None))
+                plate_id = int(vars.get('plate_id')) # TODO: default plate id value?
             except ValueError as error_msg: 
                 response.action_response = -1
                 response.action_msg = "Error: stacker and slot variables must be integers"
                 self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
-            else: 
-                # TODO: check that stacker and slot are valid integers 
+            else:
+                if stacker == None and slot == None:
+                    # get location based on plate id
+                    stacker, slot = Resource.find_plate(plate_id)
+                    stacker, slot = Resource.convert_stack_and_slot_to_int(stacker, slot)
+                
+                if Resource.is_location_occupied(stacker, slot) == False:
+                    self.get_logger().error("unload_plate command cannot be completed, already plate in given position")
 
                 # complete action if no other exceptions were raised 
                 try: 
-                    # TODO: (with resource tracking) check that plate is at this location according to records 
 
                     # check that transfer station is not already occupied
                     if not self.liconic.plate_handler.transfer_station_occupied: 
@@ -308,6 +320,7 @@ class liconicNode(Node):
                         # format response
                         response.action_response = 0
                         response.action_msg = "Plate unloaded from liconic stack " + str(stacker) + ", slot " + str(slot)
+                        Resource.remove_plate(plate_id)
                     else: # transfer station already occupied 
                         response.action_response = -1
                         response.action_msg = "Error: Liconic cannot unload plate, transfer station is occupied"
