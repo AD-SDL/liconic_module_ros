@@ -311,7 +311,12 @@ class liconicNode(Node):
                 if stacker == None and slot == None:
                     # get location based on plate id
                     stacker, slot = self.resources.find_plate(plate_id)
+                    self.get_logger().info(str(stacker))
+                    self.get_logger().info(str(slot))
+
                     stacker, slot = self.resources.convert_stack_and_slot_int(stacker, slot)
+                    self.get_logger().info(str(stacker))
+                    self.get_logger().info(str(slot))
                 else:
                     stacker = int(stacker)
                     slot = int(slot)

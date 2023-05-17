@@ -79,8 +79,12 @@ class Resource():
         '''
         converts stack and slot dict keys to ints
         '''
-        stack_int = int(stack[-1])
-        slot_int = int(slot[-1])
+        # stack_int = int(stack[-1])
+        # slot_int = int(slot[-1])
+        stack = stack.replace('Stack', '')
+        slot  = slot.replace('Slot', '')
+        stack_int = int(stack)
+        slot_int = int(slot)
         return stack_int, slot_int
 
     def convert_stack_and_slot_key(self, stack, slot):
