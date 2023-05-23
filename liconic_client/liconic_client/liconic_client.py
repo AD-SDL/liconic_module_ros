@@ -4,6 +4,7 @@ import os
 import stx                  # import liconic driver
 from stx import Stx
 from pathlib import Path
+import json
 
 import rclpy                 # import Rospy
 from rclpy.node import Node  # import Rospy Node
@@ -258,9 +259,6 @@ class liconicNode(Node):
                 stacker = vars.get('stacker', None)
                 slot = vars.get('slot', None)
                 plate_id = vars.get('plate_id') # TODO: default plate id value?
-                # self.get_logger().warn(str(stacker))
-                # self.get_logger().warn(str(slot))
-                # self.get_logger().warn(str(plate_id))
             except ValueError as error_msg: 
                 response.action_response = -1
                 response.action_msg = "Error: stacker and slot variables must be integers"
@@ -288,9 +286,6 @@ class liconicNode(Node):
                             response.action_msg = "Plate loaded into liconic stack " + str(stacker) + ", slot " + str(slot)
                             # edit resource file
                             self.get_logger().info("Updating liconic resource file")
-                            # self.get_logger().warn(str(stacker))
-                            # self.get_logger().warn(str(slot))
-                            # self.get_logger().warn(str(plate_id))
                             self.resources.add_plate(plate_id, stacker, slot)
                     except Exception as error_msg: 
                         response.action_response = -1
@@ -311,12 +306,8 @@ class liconicNode(Node):
                 if stacker == None and slot == None:
                     # get location based on plate id
                     stacker, slot = self.resources.find_plate(plate_id)
-                    self.get_logger().info(str(stacker))
-                    self.get_logger().info(str(slot))
 
                     stacker, slot = self.resources.convert_stack_and_slot_int(stacker, slot)
-                    self.get_logger().info(str(stacker))
-                    self.get_logger().info(str(slot))
                 else:
                     stacker = int(stacker)
                     slot = int(slot)
@@ -372,6 +363,11 @@ class liconicNode(Node):
             os.makedirs(self.resources_folder_path)
             self.get_logger().warn("Resource path doesn't exists")
             self.get_logger().info("Creating: " + self.resources_folder_path)
+
+        # create json file within directory
+        new_resources = self.resources.create_resource_file()
+        with open(self.resources_folder_path+'liconic_resources.json', 'w') as f:
+            json.dump(new_resources, f)
 
 
 def main(args = None):

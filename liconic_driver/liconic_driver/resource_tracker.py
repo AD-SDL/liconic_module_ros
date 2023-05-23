@@ -125,9 +125,32 @@ class Resource():
         with open(self.resource_path, 'w') as f:
             json.dump(self.resources, f)
     
+    def create_resource_file(self):
+        '''
+        if resource file does not exist, creates a blank one
+        '''
+        resources = {}
+        for stack in range(4):
+            curr_stack = "Stack"+str(stack+1)
+            print(curr_stack)
+            slot_dict = {}
+            for slot in range(22):
+                curr_slot = "Slot"+str(slot+1)
+                slot_dict[curr_slot] = {
+                    "occupied": False,
+                    "time_added": "0",
+                    "plate_id": "NONE"
+                }
+
+            resources[curr_stack] = slot_dict
+        
+        return resources
+
+    
 if __name__ == "__main__":
     test = Resource()
     # print(test.get_next_free_slot())
     # print(test.get_next_free_slot_int())
     # print(test.check_existing_id('abe'))
     # print(test.convert_stack_and_slot(3, 4))
+    test.create_resource_file()
