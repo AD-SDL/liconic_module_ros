@@ -103,6 +103,14 @@ class Resource():
             stack, slot = self.convert_stack_and_slot_key(stack, slot)
         return self.resources[stack][slot]["occupied"]
     
+    def get_plate_id(self, stack, slot):
+        '''
+        pull the plate id of the plate located in given stack and slot
+        '''
+        if type(stack) == int or type(slot) == int:
+            stack, slot = self.convert_stack_and_slot_key(stack, slot)
+        return self.resources[stack][slot]["plate_id"]
+    
     def check_existing_id(self, plate_id):
         '''
         will check the given plate id against the resource file to determine if there is a plate with the same id in the liconic
