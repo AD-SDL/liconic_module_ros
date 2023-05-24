@@ -1,10 +1,14 @@
+
+"""
+Functions here are made for users to edit the resources of the liconic without the use of wei
+"""
+
 import json
 import datetime
 
 
 class Resource():
     def __init__(self):
-        #TODO: import path from client
         self.resource_path = '/home/rpl/liconic_temp/resources/liconic_resources.json'
         self.resources = json.load(open(self.resource_path))
 
@@ -146,7 +150,13 @@ class Resource():
         
         return resources
 
+    def new_resource_file(self):
+        new_resources = self.create_resource_file()
+        with open(self.resource_path, 'w') as f:
+            json.dump(new_resources, f)
+
     
 if __name__ == "__main__":
     test = Resource()
     # test.create_resource_file()
+

@@ -213,7 +213,6 @@ class liconicNode(Node):
                                 self.liconic.shaker_controller.shaker_speed = new_shaker_speed
                                 # restart shaking at new speed 
                                 self.liconic.shaker_controller.activate_shaker()
-                                # TODO: 
                                 # format returns
                                 response.action_response = 0
                                 response.action_msg = "Liconic shaker activated, shaker speed: " + str(self.liconic.shaker_controller.shaker_speed)
@@ -311,6 +310,11 @@ class liconicNode(Node):
                 else:
                     stacker = int(stacker)
                     slot = int(slot)
+
+                    id_stacker, id_slot = self.resources.find_plate(plate_id)
+
+                    if stacker != id_stacker or slot != id_slot:
+                        self.get_logger().error("stack and slot given is different than plate id's true location")
                 
                 if self.resources.is_location_occupied(stacker, slot) == False:
                     self.get_logger().error("unload_plate command cannot be completed, no plate in given position")
@@ -365,9 +369,30 @@ class liconicNode(Node):
             self.get_logger().info("Creating: " + self.resources_folder_path)
 
         # create json file within directory
-        new_resources = self.resources.create_resource_file()
+        new_resources = self.create_resource_file()
         with open(self.resources_folder_path+'liconic_resources.json', 'w') as f:
             json.dump(new_resources, f)
+    
+    def create_resource_file(self):
+        '''
+        if resource file does not exist, creates a blank one
+        '''
+        resources = {}
+        for stack in range(4):
+            curr_stack = "Stack"+str(stack+1)
+            print(curr_stack)
+            slot_dict = {}
+            for slot in range(22):
+                curr_slot = "Slot"+str(slot+1)
+                slot_dict[curr_slot] = {
+                    "occupied": False,
+                    "time_added": "0",
+                    "plate_id": "NONE"
+                }
+
+            resources[curr_stack] = slot_dict
+        
+        return resources
 
 
 def main(args = None):
