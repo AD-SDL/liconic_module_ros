@@ -1,10 +1,14 @@
+
+"""
+Functions here are made for users to edit the resources of the liconic without the use of wei
+"""
+
 import json
 import datetime
 
 
 class Resource():
     def __init__(self):
-        #TODO: import path from client
         self.resource_path = '/home/rpl/liconic_temp/resources/liconic_resources.json'
         self.resources = json.load(open(self.resource_path))
 
@@ -103,14 +107,6 @@ class Resource():
             stack, slot = self.convert_stack_and_slot_key(stack, slot)
         return self.resources[stack][slot]["occupied"]
     
-    def get_plate_id(self, stack, slot):
-        '''
-        pull the plate id of the plate located in given stack and slot
-        '''
-        if type(stack) == int or type(slot) == int:
-            stack, slot = self.convert_stack_and_slot_key(stack, slot)
-        return self.resources[stack][slot]["plate_id"]
-    
     def check_existing_id(self, plate_id):
         '''
         will check the given plate id against the resource file to determine if there is a plate with the same id in the liconic
@@ -154,7 +150,13 @@ class Resource():
         
         return resources
 
+    def new_resource_file(self):
+        new_resources = self.create_resource_file()
+        with open(self.resource_path, 'w') as f:
+            json.dump(new_resources, f)
+
     
 if __name__ == "__main__":
     test = Resource()
     # test.create_resource_file()
+

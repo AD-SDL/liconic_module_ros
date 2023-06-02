@@ -4,6 +4,7 @@ import os
 import stx                  # import liconic driver
 from stx import Stx
 from pathlib import Path
+import json
 
 import rclpy                 # import Rospy
 from rclpy.node import Node  # import Rospy Node
@@ -37,11 +38,11 @@ class liconicNode(Node):
         self.port =  self.get_parameter("port").get_parameter_value().string_value
         
         self.liconic = Stx(self.port)
-        
-        self.resources = Resource()
 
         self.resources_folder_path = '/home/rpl/liconic_temp/resources/'  # TODO: path to folder or path to direct file?
-        # self.check_resources_folder()
+        self.check_resources_folder()
+
+        self.resources = Resource()
 
         self.description = {
             'name': NODE_NAME,
@@ -212,7 +213,6 @@ class liconicNode(Node):
                                 self.liconic.shaker_controller.shaker_speed = new_shaker_speed
                                 # restart shaking at new speed 
                                 self.liconic.shaker_controller.activate_shaker()
-                                # TODO: 
                                 # format returns
                                 response.action_response = 0
                                 response.action_msg = "Liconic shaker activated, shaker speed: " + str(self.liconic.shaker_controller.shaker_speed)
@@ -257,10 +257,7 @@ class liconicNode(Node):
                 vars = eval(request.vars)
                 stacker = vars.get('stacker', None)
                 slot = vars.get('slot', None)
-                plate_id = vars.get('plate_id') # TODO: default plate id value?
-                # self.get_logger().warn(str(stacker))
-                # self.get_logger().warn(str(slot))
-                # self.get_logger().warn(str(plate_id))
+                plate_id = vars.get('plate_id', None) # TODO: default plate id value?
             except ValueError as error_msg: 
                 response.action_response = -1
                 response.action_msg = "Error: stacker and slot variables must be integers"
@@ -288,9 +285,6 @@ class liconicNode(Node):
                             response.action_msg = "Plate loaded into liconic stack " + str(stacker) + ", slot " + str(slot)
                             # edit resource file
                             self.get_logger().info("Updating liconic resource file")
-                            # self.get_logger().warn(str(stacker))
-                            # self.get_logger().warn(str(slot))
-                            # self.get_logger().warn(str(plate_id))
                             self.resources.add_plate(plate_id, stacker, slot)
                     except Exception as error_msg: 
                         response.action_response = -1
@@ -302,7 +296,7 @@ class liconicNode(Node):
                 vars = eval(request.vars)
                 stacker = vars.get('stacker', None)
                 slot = vars.get('slot', None)
-                plate_id = vars.get('plate_id') # TODO: default plate id value?
+                plate_id = vars.get('plate_id', None) # TODO: default plate id value?
             except ValueError as error_msg: 
                 response.action_response = -1
                 response.action_msg = "Error: stacker and slot variables must be integers"
@@ -311,16 +305,16 @@ class liconicNode(Node):
                 if stacker == None and slot == None:
                     # get location based on plate id
                     stacker, slot = self.resources.find_plate(plate_id)
-                    self.get_logger().info(str(stacker))
-                    self.get_logger().info(str(slot))
 
                     stacker, slot = self.resources.convert_stack_and_slot_int(stacker, slot)
-                    self.get_logger().info(str(stacker))
-                    self.get_logger().info(str(slot))
+                elif plate_id == None:
+                    if self.resources.is_location_occupied(stacker, slot) == True:
+                        plate_id = self.resources.get_plate_id(stacker, slot)
+
                 else:
                     stacker = int(stacker)
                     slot = int(slot)
-                
+
                 if self.resources.is_location_occupied(stacker, slot) == False:
                     self.get_logger().error("unload_plate command cannot be completed, no plate in given position")
 
@@ -372,6 +366,32 @@ class liconicNode(Node):
             os.makedirs(self.resources_folder_path)
             self.get_logger().warn("Resource path doesn't exists")
             self.get_logger().info("Creating: " + self.resources_folder_path)
+
+            # create json file within directory
+            new_resources = self.create_resource_file()
+            with open(self.resources_folder_path+'liconic_resources.json', 'w') as f:
+                json.dump(new_resources, f)
+    
+    def create_resource_file(self):
+        '''
+        if resource file does not exist, creates a blank one
+        '''
+        resources = {}
+        for stack in range(4):
+            curr_stack = "Stack"+str(stack+1)
+            print(curr_stack)
+            slot_dict = {}
+            for slot in range(22):
+                curr_slot = "Slot"+str(slot+1)
+                slot_dict[curr_slot] = {
+                    "occupied": False,
+                    "time_added": "0",
+                    "plate_id": "NONE"
+                }
+
+            resources[curr_stack] = slot_dict
+        
+        return resources
 
 
 def main(args = None):
