@@ -126,7 +126,7 @@ class liconicNode(Node):
         elif request.action_handle == "set_target_temp":
             # collect variables 
             try:   
-                vars = eval(request.vars)
+                vars = json.loads(request.vars)
                 temp = float(vars.get('temp'))   # must be a float 
             except ValueError as error_msg:
                 response.action_response = -1
@@ -156,7 +156,7 @@ class liconicNode(Node):
         elif request.action_handle == "set_target_humidity": 
             # collect variables 
             try:         
-                vars = eval(request.vars)
+                vars = json.loads(request.vars)
                 humidity = float(vars.get('humidity'))  
             except ValueError as error_msg: 
                 response.action_response = -1
@@ -190,7 +190,7 @@ class liconicNode(Node):
             # TODO: make shaker speed a client variable so it doesn't have to be specified each time 
             # collect variables 
             try: 
-                vars = eval(request.vars)
+                vars = json.loads(request.vars)
                 new_shaker_speed = int(vars.get('shaker_speed')) 
             except ValueError as error_msg: 
                 response.action_response = -1
@@ -254,7 +254,7 @@ class liconicNode(Node):
 
         elif request.action_handle == "load_plate":
             try:
-                vars = eval(request.vars)
+                vars = json.loads(request.vars)
                 stacker = vars.get('stacker', None)
                 slot = vars.get('slot', None)
                 plate_id = vars.get('plate_id', None) # TODO: default plate id value?
@@ -293,7 +293,7 @@ class liconicNode(Node):
 
         elif request.action_handle == "unload_plate": 
             try: 
-                vars = eval(request.vars)
+                vars = json.loads(request.vars)
                 stacker = vars.get('stacker', None)
                 slot = vars.get('slot', None)
                 plate_id = vars.get('plate_id', None) # TODO: default plate id value?
