@@ -253,17 +253,20 @@ class liconicNode(Node):
             # resource_file_flag = self.action_vars.get("use_existing_resources", "False")
 
         elif request.action_handle == "load_plate":
+            print("Load plate called")  # TESTING
             try:
                 vars = eval(request.vars)
                 stacker = vars.get('stacker', None)
                 slot = vars.get('slot', None)
                 plate_id = vars.get('plate_id', None) # TODO: default plate id value?
+                print(f"plate id: {plate_id}")  # TESTING
             except ValueError as error_msg: 
                 response.action_response = -1
                 response.action_msg = "Error: stacker and slot variables must be integers"
                 self.get_logger().error("------- Liconic Error message: " + str(error_msg) +  (" -------"))
             else:
                 if stacker == None and slot == None: # TODO: What if user gives certain stack but not slot?
+                    print("STACKER AND SLOT NOT SPECIFIED, calling get next free slot int")
                     stacker, slot = self.resources.get_next_free_slot_int()
                 # TODO: check that valid stack and slot numbers were chosen
                 else:
@@ -399,7 +402,7 @@ def main(args = None):
     rclpy.init(args=args)  # initialize Ros2 communication
     node = liconicNode(NODE_NAME=NAME)
     rclpy.spin(node)     # keep Ros2 communication open for action node
-    rclpy.shutdown()     # kill Ros2 communication
+    rclpaction_handley.shutdown()     # kill Ros2 communication
 
 if __name__ == '__main__':
     main()
