@@ -1,6 +1,7 @@
 """REST-based client for the Liconic"""
 import json, os, time
 from argparse import ArgumentParser
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -42,8 +43,9 @@ async def lifespan(app: FastAPI):
         # Do any instrument configuration here
         state = ModuleStatus.IDLE
         liconic = Stx(args.device)
-        check_resources_folder(args.resources_path)
-        module_resources = Resource(args.resources_path)
+        resources_path = str(Path(args.resources_path).resolve())
+        check_resources_folder(resources_path)
+        module_resources = Resource(resources_path)
     except Exception as err:
         print(err)
         state = ModuleStatus.ERROR
