@@ -26,7 +26,6 @@ args = parser.parse_args()
 
 global state, module_resources, liconic
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global state, module_resources, liconic
@@ -43,7 +42,7 @@ async def lifespan(app: FastAPI):
         # Do any instrument configuration here
         state = ModuleStatus.IDLE
         liconic = Stx(args.device)
-        resources_path = str(Path(args.resources_path).resolve())
+        resources_path = Path(args.resources_path).expanduser().resolve()
         check_resources_folder(resources_path)
         module_resources = Resource(resources_path)
     except Exception as err:
@@ -183,7 +182,7 @@ def do_action(
                         # start shaking
                         liconic.shaker_controller.activate_shaker()
                     step_response.action_response = StepStatus.SUCCEEDED
-                    step_response.action_response = "Liconic shaker activated, shaker speed: " + str(liconic.shaker_controller.shaker_speed)
+                    step_response.action_msg = "Liconic shaker activated, shaker speed: " + str(liconic.shaker_controller.shaker_speed)
                 except ValueError as val_err:
                     error_msg = "Error: shaker_speed argument must be an int"
                     print(error_msg)
@@ -196,11 +195,11 @@ def do_action(
                 step_response.action_msg = "Liconic shaker stopped"
             elif action_handle == "load_plate":
                 try:
-                    stacker = int(action_args.get('stacker', None))
-                    slot = int(action_args.get('slot', None))
+                    stacker = action_args.get('stacker', None)
+                    slot = action_args.get('slot', None)
                     plate_id = action_args.get('plate_id', None)
-                    if plate_id is None:
-                        raise ValueError()
+                    if stacker is None or slot is None:
+                        stacker, slot = module_resources.get_next_free_slot_int()
                     if module_resources.is_location_occupied(stacker, slot):
                         step_response.action_response = StepStatus.FAILED
                         step_response.action_log = "load_plate command cannot be completed, already plate in given position"
@@ -215,9 +214,14 @@ def do_action(
                     step_response.action_msg = "Error: stacker and slot variables must be integers; plate_id required"
             elif action_handle == "unload_plate":
                 try:
-                    stacker = int(action_args.get('stacker', None))
-                    slot = int(action_args.get('slot', None))
+                    stacker = action_args.get('stacker', None)
+                    slot = action_args.get('slot', None)
                     plate_id = action_args.get('plate_id', None)
+                    if stacker == None or slot == None:
+                        # get location based on plate id
+                        stacker, slot = module_resources.find_plate(plate_id)
+
+                        stacker, slot = module_resources.convert_stack_and_slot_int(stacker, slot)
                     if module_resources.is_location_occupied(stacker, slot):
                         if plate_id is None:
                             plate_id = module_resources.get_plate_id(stacker, slot)
@@ -238,14 +242,15 @@ def do_action(
                 
             else:
                 # Handle Unsupported actions
-                state = ModuleStatus.IDLE
                 step_response.action_response=StepStatus.FAILED
                 step_response.action_log="Unsupported action"
         except Exception as e:
             print(str(e))
-            state = ModuleStatus.IDLE
+            state = ModuleStatus.ERROR
             step_response.action_response=StepStatus.FAILED
             step_response.action_log=str(e)
+        else:
+            state = ModuleStatus.IDLE
     return step_response
 
 def check_resources_folder(resources_folder_path):
@@ -254,11 +259,11 @@ def check_resources_folder(resources_folder_path):
     '''
     if not os.path.exists(resources_folder_path):
         os.makedirs(resources_folder_path)
-        print("Creating: " + resources_folder_path)
+        print("Creating: " + str(resources_folder_path))
 
         # create json file within directory
         new_resources = create_resource_file()
-        with open(resources_folder_path+'liconic_resources.json', 'w') as f:
+        with open(resources_folder_path / 'liconic_resources.json', 'w') as f:
             json.dump(new_resources, f)
 
 def create_resource_file():
