@@ -1,7 +1,7 @@
 [project]
-name = "pf400_module"
+name = "liconic_module"
 version = "0.2.0"
-description = "Software for automatting a PF400 robot"
+description = "Software for automatting a Liconic device"
 authors = [
     {name = "Ryan D. Lewis", email="ryan.lewis@anl.gov"},
     {name = "Rafael Vescovi", email="ravescovi@anl.gov"},
@@ -25,7 +25,7 @@ readme = "README.md"
 license = {text = "MIT"}
 
 [project.urls]
-homepage = "https://github.com/AD-SDL/pf400_module"
+homepage = "https://github.com/AD-SDL/liconic_module"
 
 [project.optional-dependencies]
 docs = [
@@ -43,11 +43,11 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["scripts*", "pf400_driver*"]
+include = ["scripts*", "liconic_driver*"]
 exclude = ["*tests*", "scripts*"]
 
 [tool.setuptools.package-data]
-pf400_module = ["*.template"]
+liconic_module = ["*.template"]
 
 #####################
 # Development Tools #
