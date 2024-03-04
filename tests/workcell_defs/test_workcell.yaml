@@ -10,10 +10,10 @@ config:
 #List of all components accessible in this workcell
 modules:
 
-  - name: pf400
-    model: Brooks Automation PF400
+  - name: liconic
+    model: liconic
     interface: wei_rest_node
     config:
-      rest_node_address: "http://pf400_module:3000"
+      rest_node_address: "http://liconic_module:2010"
     workcell_coordinates: [0, 0, 0, 0, 0, 0]
 locations: {}
