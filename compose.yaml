@@ -15,6 +15,7 @@ services:
     env_file: .env
     volumes:
       - ./scripts:/home/app/liconic_module/scripts
+      - /dev:/dev
       - ./tests:/home/app/liconic_module/tests
     ports:
       - 2010:2010
