@@ -1,4 +1,4 @@
-name: Test liconic_module 
+name: Test liconic_module
 metadata:
   author: Doga Ozgulbas
   info: Tests the functionality of the pf400 Module
@@ -11,7 +11,7 @@ flowdef:
   - name: Load Liconic
     module: liconic
     action: load_plate
-    args: 
+    args:
       plate_id: "1"
     checks: null
     comment: Stage pcr plates

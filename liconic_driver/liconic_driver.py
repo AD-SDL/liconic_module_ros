@@ -1,11 +1,10 @@
-import clr
-from pathlib import Path 
-
 # dotnet_path = Path(__file__).resolve().parent / 'dotnet' / 'liconicLibraryNet'
 # clr.AddReference(str(dotnet_path))
-# import liconicLibrary 
+# import liconicLibrary
 
-class liconic():
+
+class liconic:
     def __init__(self):
         pass
+
     pass
