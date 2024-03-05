@@ -1,4 +1,4 @@
-"""Tests the basic functionality of the OT2 Module."""
+"""Tests the basic functionality of the Liconic Module."""
 
 import time
 import unittest
@@ -24,7 +24,7 @@ class TestWEI_Base(unittest.TestCase):
         self.server_host = self.workcell.config.server_host
         self.server_port = self.workcell.config.server_port
         self.url = f"http://{self.server_host}:{self.server_port}"
-        self.module_url = "http://ot2_module:2000"
+        self.module_url = "http://liconic_module:2000"
         self.redis_host = self.workcell.config.redis_host
 
         # Check to see that server is up
@@ -49,14 +49,14 @@ class TestWEI_Base(unittest.TestCase):
                 raise TimeoutError("Module did not start in 60 seconds")
 
 
-class TestOT2Module(TestWEI_Base):
+class TestLiconicModule(TestWEI_Base):
     """Tests the basic functionality of the Sleep Module."""
 
     @pytest.skip("Not implemented")
     @pytest.mark.hardware
-    def test_ot2_module_actions(self):
+    def test_liconic_module_actions(self):
         """Tests that the take_picture action works"""
-        exp = ExperimentClient(self.server_host, self.server_port, "ot2_module_test")
+        exp = ExperimentClient(self.server_host, self.server_port, "liconic_module_test")
 
         result = exp.start_run(
             Path(self.root_dir) / Path("tests/workflow_defs/test_workflow.yaml"),
@@ -66,8 +66,8 @@ class TestOT2Module(TestWEI_Base):
         assert result["status"] == WorkflowStatus.COMPLETED
 
     @pytest.skip("Not implemented")
-    def test_ot2_module_about(self):
-        """Tests that the ot2_module's /about works"""
+    def test_liconic_module_about(self):
+        """Tests that the liconic_module's /about works"""
         response = requests.get(self.module_url + "/about")
         assert response.status_code == 200
         ModuleAbout(**response.json())
