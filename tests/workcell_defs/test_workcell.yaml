@@ -10,7 +10,7 @@ config:
 #List of all components accessible in this workcell
 modules:
 
-  - name: liconic
+  - name: liconic_module
     model: liconic
     interface: wei_rest_node
     config:
