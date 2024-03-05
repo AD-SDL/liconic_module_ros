@@ -19,6 +19,8 @@ COPY ./tests liconic_module/tests
 RUN --mount=type=cache,target=/root/.cache \
     pip install -e ./liconic_module
 
+RUN usermod -aG dialout app
+
 CMD ["python", "liconic_module/scripts/liconic_rest_node.py"]
 
 #########################################
