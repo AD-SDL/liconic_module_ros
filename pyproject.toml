@@ -18,7 +18,7 @@ dependencies = [
     "requests>=2.31.0",
     "pandas>=2.2.0",
     "uvicorn>=0.21.1",
-    "stx>=0.1.11",
+    "open-liconic-stx==0.1.0",
 ]
 requires-python = ">=3.8.1"
 readme = "README.md"
