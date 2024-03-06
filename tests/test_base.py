@@ -1,15 +1,15 @@
 import unittest
 
 
-class TestOT2_Base(unittest.TestCase):
+class TestLiconic_Base(unittest.TestCase):
     pass
 
 
-class TestImports(TestOT2_Base):
-    def test_ot2_driver_import(self):
-        import ot2_driver
+class TestImports(TestLiconic_Base):
+    def test_liconic_driver_import(self):
+        import liconic_driver
 
-        assert ot2_driver.__version__
+        assert liconic_driver.__version__
 
 
 if __name__ == "__main__":

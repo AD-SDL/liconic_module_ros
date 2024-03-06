@@ -1,7 +1,7 @@
 name: Test liconic_module
 metadata:
   author: Doga Ozgulbas
-  info: Tests the functionality of the pf400 Module
+  info: Tests the functionality of the liconic Module
   version: 0.1
 
 modules:
