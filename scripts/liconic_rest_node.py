@@ -30,7 +30,7 @@ parser.add_argument(
 parser.add_argument(
     "--resources_path",
     type=str,
-    default="~/liconic_temp/resources/",
+    default="~/liconic_temp/resources/liconic_resources.json",
     help="Path to resources directory",
 )
 args = parser.parse_args()
@@ -55,8 +55,9 @@ async def lifespan(app: FastAPI):
         state = ModuleStatus.IDLE
         liconic = Stx(args.device)
         resources_path = Path(args.resources_path).expanduser().resolve()
-        check_resources_folder(resources_path)
+        # check_resources_folder(resources_path)
         module_resources = Resource(resources_path)
+        print(module_resources)
     except Exception as err:
         print(err)
         state = ModuleStatus.ERROR
