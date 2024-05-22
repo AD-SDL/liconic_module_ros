@@ -3,9 +3,12 @@ import json
 
 
 class Resource:
-    def __init__(self):
-        # TODO: import path from client
-        self.resource_path = "/home/rpl/liconic_temp/resources/liconic_resources.json"
+    def __init__(self, resource_path):
+        # TODO: add type to resource_path
+        if not resource_path:
+            self.resource_path = "/home/rpl/liconic_temp/resources/liconic_resources.json"
+        else:
+            self.resource_path = resource_path
         self.resources = json.load(open(self.resource_path))
 
     def add_plate(

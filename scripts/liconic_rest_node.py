@@ -24,7 +24,7 @@ parser.add_argument("--port", type=str, default="2010", help="Port for REST API"
 parser.add_argument(
     "--device",
     type=str,
-    default="/dev/ttyUSB3",
+    default="/dev/ttyUSB0",
     help="Serial device for communicating with the device",
 )
 parser.add_argument(

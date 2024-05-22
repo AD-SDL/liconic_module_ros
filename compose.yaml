@@ -17,5 +17,6 @@ services:
       - ./scripts:/home/app/liconic_module/scripts
       - /dev:/dev
       - ./tests:/home/app/liconic_module/tests
+      - ~/liconic_temp:/root/liconic_temp
     ports:
       - 2010:2010
