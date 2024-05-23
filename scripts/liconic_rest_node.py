@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI):
         module_resources = Resource(resources_path)
         print(module_resources)
     except Exception as err:
-        print(err)
+        raise(err)
         state = ModuleStatus.ERROR
 
     # Yield control to the application
@@ -262,7 +262,7 @@ def do_action(
                             plate_id = module_resources.get_plate_id(stacker, slot)
                         liconic.plate_handler.move_plate_from_slot_to_transfer_station(
                             stacker, slot
-                        )
+                        )   
                         if liconic.plate_handler.transfer_station_occupied:
                             print("Liconic transfer station occupied")
                         else:

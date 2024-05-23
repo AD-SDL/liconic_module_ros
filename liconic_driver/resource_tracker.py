@@ -1,5 +1,6 @@
 import datetime
 import json
+from pathlib import Path
 
 
 class Resource:
@@ -9,8 +10,11 @@ class Resource:
             self.resource_path = "~/liconic_temp/resources/liconic_resources.json"
         else:
             self.resource_path = resource_path
-        self.resources = json.load(open(self.resource_path))
-
+        if Path(self.resource_path).exists():
+            with open(self.resource_path, 'r') as f:
+                self.resources = json.load(f)
+        else:
+            self.resources = self.create_resource_file()
     def add_plate(
         self, plate_id, stack=None, slot=None
     ):  # TODO: add parameter for identifying plate type if we have multiple types of stacks in liconic
