@@ -10,12 +10,11 @@ services:
         - ${IMAGE}:latest
         - ${IMAGE}:${PROJECT_VERSION}
         - ${IMAGE}:dev
-    command: python liconic_module/scripts/liconic_rest_node.py --port 2010 --device ${DEVICE} --resources_path ${RESOURCES_PATH}
+    command: python -m liconic_rest_node --port 2010 --device ${DEVICE} --resources_path ${RESOURCES_PATH}
     privileged: true
     env_file: .env
     volumes:
-      - ./scripts:/home/app/liconic_module/scripts
-      - /dev:/dev
+      - ./src:/home/app/liconic_module/src
       - ./tests:/home/app/liconic_module/tests
       - ~/liconic_temp:/root/liconic_temp
     ports:
