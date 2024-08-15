@@ -9,6 +9,7 @@ __pycache__/
 
 # C extensions
 *.so
+!src/liconic_interface/libstxlib.so
 
 # Distribution / packaging
 .Python

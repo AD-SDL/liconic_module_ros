@@ -1,6 +1,6 @@
 [project]
 name = "liconic_module"
-version = "0.2.0"
+version = "0.4.0"
 description = "Software for automatting a Liconic device"
 authors = [
     {name = "Ryan D. Lewis", email="ryan.lewis@anl.gov"},
@@ -11,7 +11,7 @@ authors = [
     {name = "Tobias Ginsburg", email = "tginsburg@anl.gov"},
 ]
 dependencies = [
-    "ad_sdl.wei>=0.5.3",
+    "ad_sdl.wei>=0.5.9",
     "fastapi>=0.103.2",
     "uvicorn>=0.21.1",
     "open-liconic-stx==0.1.0",
@@ -23,12 +23,6 @@ license = {text = "MIT"}
 [project.urls]
 homepage = "https://github.com/AD-SDL/liconic_module"
 
-[project.optional-dependencies]
-docs = [
-    "autodoc-pydantic",
-    "sphinx",
-    "sphinx-rtd-theme",
-]
 
 ######################
 # Build Info + Tools #
@@ -36,14 +30,6 @@ docs = [
 [build-system]
 requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["scripts*", "liconic_driver*"]
-exclude = ["*tests*", "scripts*"]
-
-[tool.setuptools.package-data]
-liconic_module = ["*.template"]
 
 #####################
 # Development Tools #
