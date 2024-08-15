@@ -1,185 +1,149 @@
+"""Provides a plate tracking class for managing the Liconic's storage"""
+
 import datetime
-import json
+import random
 from pathlib import Path
 
+from typing_extensions import Dict, Optional, Tuple, Union
+from wei.types import BaseModel
 
-class Resource:
-    def __init__(self, resource_path):
-        # TODO: add type to resource_path
+
+class Slot(BaseModel):
+    """Defines the structure of a slot"""
+
+    occupied: bool = False
+    plate_id: Optional[str] = None
+    time_added: Optional[str] = None
+
+
+class Stack(BaseModel):
+    """Defines the structure of a stack"""
+
+    slots: Dict[int, Slot] = {slot: Slot() for slot in range(1, 23)}
+
+    def __getitem__(self, item):
+        """Get a slot in the stack"""
+        return self.slots[item]
+
+    def __setitem__(self, key, value):
+        """Set a slot in the stack"""
+        self.slots[key] = value
+
+    def __delitem__(self, key):
+        """Delete a slot in the stack"""
+        del self.slots[key]
+
+
+class ResourceFile(BaseModel):
+    """Defines the structure of the resource file"""
+
+    stacks: Dict[int, Stack] = {stack: Stack() for stack in range(1, 5)}
+
+    def __getitem__(self, item):
+        """Get a stack in the resource file"""
+        return self.stacks[item]
+
+    def __setitem__(self, key, value):
+        """Set a stack in the resource file"""
+        self.stacks[key] = value
+
+    def __delitem__(self, key):
+        """Delete a stack in the resource file"""
+        del self.stacks[key]
+
+
+class ResourceTracker:
+    """Tracks the plate resources of a Liconic incubator"""
+
+    def __init__(self, resource_path: Optional[Union[Path, str]] = None):
+        """Initialize the resource tracker"""
         if not resource_path:
-            self.resource_path = "~/liconic_temp/resources/liconic_resources.json"
+            self.resource_path = (
+                Path.home() / "liconic_temp/resources/liconic_resources.yaml"
+            )
         else:
-            self.resource_path = resource_path
-        if Path(self.resource_path).exists():
-            with open(self.resource_path, 'r') as f:
-                self.resources = json.load(f)
+            self.resource_path = Path(resource_path)
+        if self.resource_path.exists():
+            self.resources = ResourceFile.from_yaml(self.resource_path)
         else:
-            self.resources = self.create_resource_file()
+            self.resource_path.parent.mkdir(parents=True, exist_ok=True)
+            self.resources = ResourceFile()
+            self.update_resource_file()
+
     def add_plate(
         self, plate_id, stack=None, slot=None
     ):  # TODO: add parameter for identifying plate type if we have multiple types of stacks in liconic
         """
         updates the liconic resource file when a new plate is placed into the liconic
         """
-        if stack != None and slot != None:
-            stack, slot = self.convert_stack_and_slot_key(stack, slot)
-            if self.resources[stack][slot]["occupied"] == True:
-                print(
-                    "ERROR: liconic position: "
-                    + str(stack)
-                    + str(slot)
-                    + " already occupied"
-                )
-            else:
-                self.resources[stack][slot]["occupied"] = True
-                self.resources[stack][slot]["plate_id"] = plate_id
-                self.resources[stack][slot]["time_added"] = str(datetime.datetime.now())
-                self.update_resource_file()
+        if stack is not None and slot is not None:
+            if self.is_location_occupied(stack, slot):
+                raise Exception("Location already occupied")
         else:
-            stack, slot = self.get_next_free_slot_int()
-            if self.resources[stack][slot]["occupied"] == True:
-                print(
-                    "ERROR: liconic position: "
-                    + str(stack)
-                    + str(slot)
-                    + " already occupied"
-                )
-            else:
-                self.resources[stack][slot]["occupied"] = True
-                self.resources[stack][slot]["plate_id"] = plate_id
-                self.resources[stack][slot]["time_added"] = datetime.datetime.now()
-                self.update_resource_file()
+            stack, slot = self.get_next_free_slot()
+        self.resources[stack][slot] = Slot(
+            occupied=True,
+            plate_id=plate_id,
+            time_added=str(datetime.datetime.now()),
+        )
+        self.update_resource_file()
 
-    def remove_plate(self, plate_id, stack=None, slot=None):
+    def remove_plate(self, plate_id=None, stack=None, slot=None):
         """
         locates and removes the given plate from the resource file
         """
-        if (
-            stack == None and slot == None
-        ):  # TODO what if user gives EITHER slot or stack
+        if stack is None or slot is None:
             stack, slot = self.find_plate(plate_id)
 
-        if self.resources[stack][slot]["occupied"] == False:
-            print(
-                "ERROR: liconic position: " + str(stack) + str(slot) + " has no plate"
-            )
+        if not self.resources[stack][slot].occupied:
+            raise Exception("No plate in location")
         else:
-            self.resources[stack][slot]["occupied"] = False
-            self.resources[stack][slot]["plate_id"] = "NONE"
-            self.resources[stack][slot]["time_added"] = "NONE"
+            self.resources[stack][slot] = Slot()
             # TODO: get elapsed time of plate storage
             self.update_resource_file()
 
-    def find_plate(self, plate_id):
+    def find_plate(self, plate_id: str) -> Tuple[int, int]:
         """
         returns the stack and slot a plate is located on, given the plate id
         """
-        key_list = list(self.resources.keys())
-        value_list = list(self.resources.values())
-        for stack in range(len(key_list)):
-            for value in value_list[stack]:
-                if self.resources[key_list[stack]][value]["plate_id"] == plate_id:
-                    return key_list[stack], value
+        for stack_key, stack in self.resources.stacks.items():
+            for slot_key, slot in stack.slots.items():
+                if slot.plate_id == plate_id:
+                    return stack_key, slot_key
+        raise Exception("Plate not found")
 
-    def get_next_free_slot(self):
+    def get_next_free_slot(self) -> Tuple[int, int]:
         """
         if no stack and shelf is passed into add_plate, return the next free location
         """
-        key_list = list(self.resources.keys())
-        value_list = list(self.resources.values())
-        for stack in range(len(key_list)):
-            for value in value_list[stack]:
-                if self.resources[key_list[stack]][value]["occupied"] == False:
-                    return key_list[stack], value
+        stack_keys = list(self.resources.stacks.keys())
+        random.shuffle(
+            stack_keys
+        )  # * randomize the order of the stacks to prevent the same stack from always being used
+        for stack_key in stack_keys:
+            for slot_key in self.resources[stack_key].slots.keys():
+                if not self.resources[stack_key][slot_key].occupied:
+                    return stack_key, slot_key
+        raise Exception("No free slots available")
 
-    def get_next_free_slot_int(self):
-        stack, slot = self.get_next_free_slot()
-        # stack_int = int(stack[-1])
-        # slot_int = int(slot[-1])  # THIS IS WHAT'S CAUSING THE ERROR
-        stack = stack.replace("Stack", "")
-        slot = slot.replace("Slot", "")
-        stack_int = int(stack)
-        slot_int = int(slot)
-        return stack_int, slot_int
-
-    def convert_stack_and_slot_int(self, stack, slot):
-        """
-        converts stack and slot dict keys to ints
-        """
-        # stack_int = int(stack[-1])
-        # slot_int = int(slot[-1])
-        stack = stack.replace("Stack", "")
-        slot = slot.replace("Slot", "")
-        stack_int = int(stack)
-        slot_int = int(slot)
-        return stack_int, slot_int
-
-    def convert_stack_and_slot_key(self, stack, slot):
-        """
-        converts stack and slot ints into dict keys
-        """
-        new_stack = "Stack" + str(stack)
-        new_slot = "Slot" + str(slot)
-        return new_stack, new_slot
-
-    def is_location_occupied(self, stack, slot):
+    def is_location_occupied(self, stack: int, slot: int) -> bool:
         """
         given a stack and slot, determine if the location is occupied
         """
-        if type(stack) == int or type(slot) == int:
-            stack, slot = self.convert_stack_and_slot_key(stack, slot)
-        return self.resources[stack][slot]["occupied"]
+        return self.resources[int(stack)][int(slot)].occupied
 
-    def get_plate_id(self, stack, slot):
+    def get_plate_id(self, stack: int, slot: int) -> str:
         """
         pull the plate id of the plate located in given stack and slot
         """
-        if type(stack) == int or type(slot) == int:
-            stack, slot = self.convert_stack_and_slot_key(stack, slot)
-        return self.resources[stack][slot]["plate_id"]
+        return self.resources[int(stack)][int(slot)]["plate_id"]
 
-    def check_existing_id(self, plate_id):
-        """
-        will check the given plate id against the resource file to determine if there is a plate with the same id in the liconic
-        """
-        key_list = list(self.resources.keys())
-        value_list = list(self.resources.values())
-        for stack in range(len(key_list)):
-            for value in value_list[stack]:
-                if self.resources[key_list[stack]][value]["plate_id"] == plate_id:
-                    return -1
-
-        return 0
-
-    def update_resource_file(self):
+    def update_resource_file(self) -> None:
         """
         updates the external resource file to match self.resources
         """
-        with open(self.resource_path, "w") as f:
-            json.dump(self.resources, f)
-
-    def create_resource_file(self):
-        """
-        if resource file does not exist, creates a blank one
-        """
-        resources = {}
-        for stack in range(4):
-            curr_stack = "Stack" + str(stack + 1)
-            print(curr_stack)
-            slot_dict = {}
-            for slot in range(22):
-                curr_slot = "Slot" + str(slot + 1)
-                slot_dict[curr_slot] = {
-                    "occupied": False,
-                    "time_added": "0",
-                    "plate_id": "NONE",
-                }
-
-            resources[curr_stack] = slot_dict
-
-        return resources
+        self.resources.write_yaml(self.resource_path)
 
 
 if __name__ == "__main__":
-    test = Resource()
-    # test.create_resource_file()
+    test = ResourceTracker()

@@ -10,7 +10,7 @@ LABEL org.opencontainers.image.licenses=MIT
 
 RUN mkdir -p liconic_module
 
-COPY ./src liconic_module/scripts
+COPY ./src liconic_module/src
 COPY ./README.md liconic_module/README.md
 COPY ./pyproject.toml liconic_module/pyproject.toml
 
@@ -19,6 +19,6 @@ RUN --mount=type=cache,target=/root/.cache \
 
 RUN usermod -aG dialout app
 
-CMD ["python", "liconic_module/scripts/liconic_rest_node.py"]
+CMD ["python", "liconic_module/src/liconic_rest_node.py"]
 
 #########################################
