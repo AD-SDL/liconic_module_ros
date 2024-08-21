@@ -10,6 +10,7 @@ from liconic_interface.resource_tracker import ResourceTracker
 from wei.modules.rest_module import RESTModule
 from wei.types import StepResponse
 from wei.types.module_types import ModuleState
+from wei.types.step_types import StepSucceeded
 
 liconic_module = RESTModule(
     name="liconic_node",
@@ -91,28 +92,12 @@ def liconic_state_handler(state: State):
 
 
 @liconic_module.action()
-def get_current_temp(state: State) -> StepResponse:
-    """Returns the current temperature of the incubator"""
-    return StepResponse.step_succeeded(
-        state.liconic.climate_controller.current_temperature
-    )
-
-
-@liconic_module.action()
-def get_target_temp(state: State) -> StepResponse:
-    """Returns the target temperature of the incubator"""
-    return StepResponse.step_succeeded(
-        state.liconic.climate_controller.target_temperature
-    )
-
-
-@liconic_module.action()
 def set_target_temp(state: State, temp: float) -> StepResponse:
     """Sets the target temperature of the incubator"""
     liconic: Stx = state.liconic
     try:
         liconic.target_temperature = float(temp)
-        return StepResponse.step_succeeded(f"Set temperature to {temp}")
+        return StepSucceeded()
     except ValueError:
         error_msg = "Error: temp argument must be a float"
         print(error_msg)
@@ -120,25 +105,11 @@ def set_target_temp(state: State, temp: float) -> StepResponse:
 
 
 @liconic_module.action()
-def get_current_humidity(state: State) -> StepResponse:
-    """Returns the current humidity of the incubator"""
-    liconic: Stx = state.liconic
-    return StepResponse.step_succeeded(liconic.current_humidity)
-
-
-@liconic_module.action()
-def get_target_humidity(state: State) -> StepResponse:
-    """Returns the target humidity of the incubator"""
-    liconic: Stx = state.liconic
-    return StepResponse.step_succeeded(liconic.target_humidity)
-
-
-@liconic_module.action()
 def set_target_humidity(state: State, humidity: float) -> StepResponse:
     """Sets the target humidity of the incubator"""
     liconic: Stx = state.liconic
     liconic.target_humidity = float(humidity)
-    return StepResponse.step_succeeded(f"Set humidity to {humidity}")
+    return StepSucceeded()
 
 
 @liconic_module.action()
@@ -150,9 +121,7 @@ def begin_shake(state: State, shaker_speed: int):
         liconic.shaker_active = False
         liconic.shaker_speed = int(shaker_speed)
     liconic.shaker_active = True
-    return StepResponse.step_succeeded(
-        f"Liconic shaker activated, shaker speed: {liconic.shaker_speed}"
-    )
+    return StepSucceeded()
 
 
 @liconic_module.action()
@@ -160,7 +129,7 @@ def end_shake(state: State):
     """Stop the liconic's shaker"""
     liconic: Stx = state.liconic
     liconic.shaker_active = False
-    return StepResponse.step_succeeded("Liconic shaker stopped")
+    return StepSucceeded()
 
 
 @liconic_module.action()
@@ -190,9 +159,7 @@ def load_plate(
     while liconic.is_busy:
         time.sleep(1)
     module_resources.add_plate(plate_id, stacker, slot)
-    return StepResponse.step_succeeded(
-        f"Plate loaded into liconic stack {stacker}, slot {slot}"
-    )
+    return StepSucceeded()
 
 
 @liconic_module.action()
@@ -229,11 +196,11 @@ def unload_plate(
     if liconic.transfer_station_occupied:
         if plate_id:
             module_resources.remove_plate(plate_id=plate_id, stack=stacker, slot=slot)
-        return StepResponse.step_succeeded(
-            f"Plate unloaded from liconic stack {stacker}, slot {slot}"
-        )
+        return StepSucceeded()
     else:
-        print(f"Failed to unload plate from liconic stack {stacker}, slot {slot}")
+        return StepResponse.step_failed(
+            f"Failed to unload plate from liconic stack {stacker}, slot {slot}"
+        )
 
 
 if __name__ == "__main__":
