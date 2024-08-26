@@ -5,11 +5,12 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi.datastructures import State
-from liconic_interface import Stx
-from liconic_interface.resource_tracker import ResourceTracker
 from wei.modules.rest_module import RESTModule
 from wei.types import StepResponse
 from wei.types.module_types import ModuleState
+
+from liconic_interface import Stx
+from liconic_interface.resource_tracker import ResourceTracker
 
 liconic_module = RESTModule(
     name="liconic_node",
@@ -219,16 +220,12 @@ def unload_plate(
         if not liconic.slot_occupied(stacker, slot):
             return StepResponse.step_failed("No plate in location, can't unload.")
     if plate_id is None:
-        try:
-            plate_id = module_resources.get_plate_id(stacker, slot)
-        except Exception:
-            pass
+        plate_id = module_resources.get_plate_id(stacker, slot)
     liconic.unload_plate(stacker, slot)
     while liconic.is_busy:
         time.sleep(1)
     if liconic.transfer_station_occupied:
-        if plate_id:
-            module_resources.remove_plate(plate_id=plate_id, stack=stacker, slot=slot)
+        module_resources.remove_plate(plate_id=plate_id, stack=stacker, slot=slot)
         return StepResponse.step_succeeded(
             f"Plate unloaded from liconic stack {stacker}, slot {slot}"
         )
