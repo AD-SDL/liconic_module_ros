@@ -187,6 +187,12 @@ def load_plate(
         return StepResponse.step_failed(
             "load_plate command cannot be completed, no plate in transfer station"
         )
+    if plate_id is not None or plate_id != "":
+        try:
+            module_resources.find_plate(plate_id)
+            return StepResponse.step_failed(f"Plate with ID {plate_id} already in liconic")
+        except ValueError:
+            pass
     liconic.load_plate(stacker, slot)
     while liconic.is_busy:
         time.sleep(1)
